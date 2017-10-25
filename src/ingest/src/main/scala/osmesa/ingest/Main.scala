@@ -89,9 +89,9 @@ object Main extends CommandApp(
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", classOf[geotrellis.spark.io.kryo.KryoRegistrator].getName)
         .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .set("spark.driver.extraClassPath", "/opt/jars/aws-java-sdk-1.7.4.jar:/opt/jars/hadoop-aws-2.7.3.jar")
         .set("spark.hadoop.fs.s3a.access.key", s3AccessId)
         .set("spark.hadoop.fs.s3a.secret.key", s3AccessSecret)
+        //.set("spark.driver.extraClassPath", "/opt/jars/hadoop-aws-2.7.3.jar")
 
 
       implicit val ss: SparkSession =

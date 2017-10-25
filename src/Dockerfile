@@ -19,4 +19,4 @@ RUN mkdir -p /opt/src
 
 WORKDIR /opt/src
 
-CMD ./sbt
+CMD ["./sbt"]
