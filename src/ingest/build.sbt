@@ -18,7 +18,10 @@ libraryDependencies ++= Seq(
   "com.google.protobuf" % "protobuf-java" % "2.5.0",
   vectorpipe exclude("com.google.protobuf", "protobuf-java"),
   geomesaHbaseDatastore,
-  "org.apache.spark"            %% "spark-hive"            % "2.2.0" % "provided",
+  "com.esotericsoftware" % "kryo-shaded" % "4.0.0",
+  "org.yaml" % "snakeyaml" % "1.8",
+  "org.apache.hadoop" % "hadoop-aws" % "2.8.1",
+  "com.amazonaws" % "aws-java-sdk-s3" % "1.10.77",
   // "org.locationtech.geomesa" % "geomesa-security_2.11" % Version.geomesa,
   // "org.locationtech.geomesa" % "geomesa-feature-common_2.11" % Version.geomesa,
   // "org.locationtech.geomesa" % "geomesa-utils_2.11" % Version.geomesa,
@@ -42,6 +45,8 @@ initialCommands in console :=
   """
   """
 
+mainClass in assembly := Some("osmesa.ingest.Main")
+
 assemblyJarName in assembly := "osmesa-ingest.jar"
 
 assemblyShadeRules in assembly := {
@@ -58,10 +63,13 @@ assemblyShadeRules in assembly := {
   )
 }
 
+val meta = """META.INF(.)*""".r
 assemblyMergeStrategy in assembly := {
   case s if s.startsWith("META-INF/services") => MergeStrategy.concat
-  case "reference.conf" | "application.conf"  => MergeStrategy.concat
-  case "META-INF/MANIFEST.MF" | "META-INF\\MANIFEST.MF" => MergeStrategy.discard
-  case "META-INF/ECLIPSEF.RSA" | "META-INF/ECLIPSEF.SF" => MergeStrategy.discard
+  case PathList("javax", "servlet", xs @ _*) => MergeStrategy.first
+  case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+  case n if n.startsWith("reference.conf") => MergeStrategy.concat
+  case n if n.endsWith(".conf") => MergeStrategy.concat
+  case meta(_) => MergeStrategy.discard
   case _ => MergeStrategy.first
 }

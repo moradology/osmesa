@@ -12,5 +12,4 @@
     - { role: "azavea.java" }
     - { role: "osmesa.aws-cli" }
     - { role: "osmesa.docker" }
-    - { role: "osmesa.shellcheck" }
     - { role: "osmesa.env" }

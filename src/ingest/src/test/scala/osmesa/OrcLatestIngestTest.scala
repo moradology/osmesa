@@ -48,7 +48,7 @@ import scala.collection.JavaConverters._
 object OrcLatestIngestTest {
   def getHBaseDataStoreConf(): Map[String, Serializable] =
     Map(
-      "hbase.catalog" -> "suriname-roads"
+      "hbase.catalog" -> "turkmenistan-roads"
     )
 
   def createSimpleFeatureType(simpleFeatureTypeName: String): SimpleFeatureType = {
@@ -101,7 +101,7 @@ object OrcLatestIngestTest {
   def main(args: Array[String]): Unit = {
     import org.locationtech.geomesa.utils.geotools.RichSimpleFeatureType.RichSimpleFeatureType
 
-    val orc = "/opt/src/test-data/suriname.orc"
+    val orc = "/opt/src/turkmenistan.orc"
 
     /* Settings compatible for both local and EMR execution */
     val conf = new SparkConf()
