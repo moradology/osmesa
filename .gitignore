@@ -64,3 +64,8 @@ dist/
 \#*#
 *~
 .#*
+
+# Data files
+*.orc
+*.tar.gz
+*.log

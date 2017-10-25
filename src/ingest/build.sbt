@@ -9,29 +9,29 @@ dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.
 libraryDependencies ++= Seq(
   decline,
   hive,
-  //gtGeomesa exclude("com.google.protobuf", "protobuf-java"),
-  gtGeotools exclude("com.google.protobuf", "protobuf-java"),
-  gtS3 exclude("com.google.protobuf", "protobuf-java"),
-  gtSpark exclude("com.google.protobuf", "protobuf-java"),
-  gtVector exclude("com.google.protobuf", "protobuf-java"),
-  gtVectorTile exclude("com.google.protobuf", "protobuf-java"),
-  "com.google.protobuf" % "protobuf-java" % "2.5.0",
-  vectorpipe exclude("com.google.protobuf", "protobuf-java"),
-  geomesaHbaseDatastore,
-  "org.apache.spark"            %% "spark-hive"            % "2.2.0" % "provided",
-  // "org.locationtech.geomesa" % "geomesa-security_2.11" % Version.geomesa,
-  // "org.locationtech.geomesa" % "geomesa-feature-common_2.11" % Version.geomesa,
-  // "org.locationtech.geomesa" % "geomesa-utils_2.11" % Version.geomesa,
-  // "org.locationtech.geomesa" % "geomesa-feature-kryo_2.11" % Version.geomesa,
-  // "org.locationtech.geomesa" % "geomesa-filter_2.11" % Version.geomesa,
-  // "org.locationtech.geomesa" % "geomesa-z3_2.11" % Version.geomesa,
-  // "org.locationtech.geomesa" % "geomesa-index-api_2.11" % Version.geomesa,
+  protobuf,
+  gmHBaseStore,
+  kryo,
+  snakeyaml,
   cats,
   hbaseClient,
   hbaseCommon,
   hbaseServer,
   scalactic,
-  scalatest
+  scalatest,
+  gtGeotools
+    exclude("com.google.protobuf", "protobuf-java"),
+  gtS3
+    exclude("com.google.protobuf", "protobuf-java")
+    exclude("com.amazonaws", "aws-java-sdk"),
+  gtSpark
+    exclude("com.google.protobuf", "protobuf-java"),
+  gtVector
+    exclude("com.google.protobuf", "protobuf-java"),
+  gtVectorTile
+    exclude("com.google.protobuf", "protobuf-java"),
+  vectorpipe
+    exclude("com.google.protobuf", "protobuf-java")
 )
 
 fork in Test := true
@@ -41,6 +41,8 @@ javaOptions ++= Seq("-Xmx5G")
 initialCommands in console :=
   """
   """
+
+mainClass in assembly := Some("osmesa.ingest.Main")
 
 assemblyJarName in assembly := "osmesa-ingest.jar"
 
@@ -58,10 +60,13 @@ assemblyShadeRules in assembly := {
   )
 }
 
+val meta = """META.INF(.)*""".r
 assemblyMergeStrategy in assembly := {
   case s if s.startsWith("META-INF/services") => MergeStrategy.concat
-  case "reference.conf" | "application.conf"  => MergeStrategy.concat
-  case "META-INF/MANIFEST.MF" | "META-INF\\MANIFEST.MF" => MergeStrategy.discard
-  case "META-INF/ECLIPSEF.RSA" | "META-INF/ECLIPSEF.SF" => MergeStrategy.discard
+  case PathList("javax", "servlet", xs @ _*) => MergeStrategy.first
+  case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+  case n if n.startsWith("reference.conf") => MergeStrategy.concat
+  case n if n.endsWith(".conf") => MergeStrategy.concat
+  case meta(_) => MergeStrategy.discard
   case _ => MergeStrategy.first
 }
