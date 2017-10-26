@@ -42,8 +42,6 @@ initialCommands in console :=
   """
   """
 
-mainClass in assembly := Some("osmesa.ingest.Main")
-
 assemblyJarName in assembly := "osmesa-ingest.jar"
 
 assemblyShadeRules in assembly := {

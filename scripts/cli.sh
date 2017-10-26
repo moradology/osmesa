@@ -8,7 +8,11 @@ shift
 case "$program" in
   "ingest")
     docker-compose -f docker-compose.cli.yml run cli \
-      spark-submit ingest/target/scala-2.11/osmesa-ingest.jar "$@"
+      spark-submit --class osmesa.ingest.Ingest ingest/target/scala-2.11/osmesa-ingest.jar "$@"
+    ;;
+  "drop")
+    docker-compose -f docker-compose.cli.yml run cli \
+      spark-submit --class osmesa.ingest.RemoveSchema ingest/target/scala-2.11/osmesa-ingest.jar "$@"
     ;;
   "sbt")
     docker-compose -f docker-compose.cli.yml run cli "$@"
@@ -21,8 +25,9 @@ case "$program" in
     docker-compose -f docker-compose.cli.yml run cli \
       spark-submit --class osmesa.client.TypeNames client/target/scala-2.11/osmesa-client.jar "$@"
     ;;
-  "cql")
-    echo "CQL!"
+  "ecql")
+    docker-compose -f docker-compose.cli.yml run cli \
+      spark-submit --class osmesa.client.QueryECQL client/target/scala-2.11/osmesa-client.jar "$@"
     ;;
   *)
     echo "The first argument should be one of 'ingest' or 'sbt'."
