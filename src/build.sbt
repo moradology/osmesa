@@ -50,3 +50,8 @@ lazy val ingest = project
   .settings(commonSettings: _*)
   .dependsOn(common)
 
+lazy val client = project
+  .settings(commonSettings: _*)
+  .dependsOn(common)
+  .dependsOn(ingest)
+
