@@ -12,6 +12,7 @@ import org.geotools.filter.text.cql2.CQLException
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.locationtech.geomesa.utils.text.WKTUtils
+import org.locationtech.geomesa.hbase.data._
 import org.opengis.feature.Feature
 import org.opengis.feature.simple.SimpleFeature
 import org.opengis.feature.simple.SimpleFeatureType
@@ -36,7 +37,6 @@ import geotrellis.spark.tiling._
 import geotrellis.vectortile.VectorTile
 import geotrellis.geotools.SimpleFeatureToFeature
 import org.geotools.data.simple.SimpleFeatureCollection
-import org.locationtech.geomesa.utils.geotools.RichSimpleFeatureType.RichSimpleFeatureType
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
@@ -51,7 +51,6 @@ import org.geotools.data.DataStore
 import org.geotools.filter.text.ecql.ECQL
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, HBaseAdmin}
 import org.apache.hadoop.hbase.HBaseConfiguration
-import org.locationtech.geomesa.hbase.data._
 
 import java.io.IOException
 import java.io.Serializable
@@ -91,12 +90,12 @@ object QueryECQL extends CommandApp(
       try {
         Util.loadYamlAsDatastoreConf(dsConfUri).andThen({ dsConf =>
           try {
-            val dataStore = DataStoreFinder.getDataStore(dsConf)
+            val dataStore = DataStoreFinder.getDataStore(dsConf).asInstanceOf[HBaseDataStore]
             val featureSource = dataStore.getFeatureSource(typeName)
             val filter = ECQL.toFilter(ecql)
             val query = new org.geotools.data.Query(typeName, filter)
 
-            Valid(featureSource.getFeatures())
+            Valid(featureSource.getFeatures(query))
           } catch {
             case e: org.geotools.filter.text.cql2.CQLException =>
               Invalid(NEL.of(s"Unable to parse provided string as an ECQL filter (${ecql})"))
@@ -109,8 +108,7 @@ object QueryECQL extends CommandApp(
               var count = 0
               while (iter.hasNext()) {
                 count += 1
-                val feature = iter.next();
-                println(SimpleFeatureToFeature(feature))
+                println(iter.next())
               }
               println("the count", count)
             } finally {
