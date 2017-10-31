@@ -63,11 +63,11 @@ object Count extends CommandApp(
   name = "Count the records in an OSMesa table",
   header = "Count the records in an OSMesa table",
   main = {
-    val datastoreConfO = Opts.option[URI]("conf", help = "Geotools Datastore Configuration (YAML) URI")
+    val catalogOpt = Opts.option[String]("catalog", short = "c", help = "An HBase catalog for this server to query.")
     val typeNameO = Opts.option[String]("type", help = "Geotools SimpleFeatureType Name")
     val localF = Opts.flag("local", help = "Is this to be run locally?").orFalse
 
-    (datastoreConfO, typeNameO, localF).mapN({ (dsConfUri, typeName, local) =>
+    (catalogOpt, typeNameO, localF).mapN({ (catalog, typeName, local) =>
       /* Settings compatible for both local and EMR execution */
       val sc = new SparkConf()
         .setIfMissing("spark.master", "local[*]")
@@ -85,17 +85,13 @@ object Count extends CommandApp(
       if (local) useS3(ss)
 
       try {
-        Util.loadYamlAsDatastoreConf(dsConfUri).map({ dsConf =>
-          println("dsconf", dsConf)
-          val dataStore = DataStoreFinder.getDataStore(dsConf)
-          val featureSource = dataStore.getFeatureSource(typeName)
-          featureSource.getCount(new org.geotools.data.Query(""))
-        }) match {
-          case Valid(n) => println(s"$n records for counted for the typeName $typeName")
-          case Invalid(nel) => nel.map({ error =>
-            println(error)
-          })
-        }
+        val datastore = DataStoreFinder
+          .getDataStore(java.util.Map("hbase.catalog" -> catalog))
+          .asInstanceOf[HBaseDataStore]
+
+        val featureSource = dataStore.getFeatureSource(typeName)
+        val count = featureSource.getCount(new org.geotools.data.Query(""))
+        println(s"$count records for counted for the typeName $typeName")
       } finally {
         ss.stop()
       }

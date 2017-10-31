@@ -46,7 +46,6 @@ import vectorpipe.util.LayerMetadata
 import cats.implicits._
 import cats.data.{NonEmptyList => NEL, _}
 import Validated._
-import com.monovore.decline._
 import org.geotools.data.DataStore
 import org.geotools.filter.text.ecql.ECQL
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, HBaseAdmin}

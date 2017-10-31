@@ -58,7 +58,7 @@ assemblyShadeRules in assembly := {
   )
 }
 
-val meta = """META.INF(.)*""".r
+val meta = raw"""META.INF(.)*""".r
 assemblyMergeStrategy in assembly := {
   case s if s.startsWith("META-INF/services") => MergeStrategy.concat
   case PathList("javax", "servlet", xs @ _*) => MergeStrategy.first

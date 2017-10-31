@@ -1,3 +1,0 @@
-# The YAML datastore configuration used for local test ingests
-"hbase.catalog": "turkmenistan-roads"
-

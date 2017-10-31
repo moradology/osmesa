@@ -31,7 +31,8 @@ lazy val commonSettings = Seq(
     "geosolutions" at "http://maven.geo-solutions.it/",
     "osgeo" at "http://download.osgeo.org/webdav/geotools/"
   ),
-  shellPrompt := { s => Project.extract(s).currentProject.id + " > " }
+  shellPrompt := { s => Project.extract(s).currentProject.id + " > " },
+  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 )
 
 /* Allow `run` to be used with Spark code, while assembling fat JARs w/o Spark bundled */
@@ -54,4 +55,8 @@ lazy val client = project
   .settings(commonSettings: _*)
   .dependsOn(common)
   .dependsOn(ingest)
+
+lazy val query = project
+  .settings(commonSettings: _*)
+  .dependsOn(common)
 

@@ -1,37 +1,27 @@
 import Dependencies._
 
-name := "osmesa-client"
-
-dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.6.7"
-dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.7"
-dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.6.7"
+name := "osmesa-query"
 
 libraryDependencies ++= Seq(
   decline,
-  hive,
-  protobuf,
   gmHBaseStore,
-  kryo,
-  snakeyaml,
   cats,
+  akka,
+  akkaStream,
+  akkaHttp,
+  akkaTestkit,
+  circeCore,
+  circeGeneric,
+  circeExtras,
+  circeParser,
+  circeOptics,
+  akkaCirceJson,
   hbaseClient,
   hbaseCommon,
-  hbaseServer,
-  scalactic,
-  scalatest,
-  gtGeotools
-    exclude("com.google.protobuf", "protobuf-java"),
-  gtS3
-    exclude("com.google.protobuf", "protobuf-java")
-    exclude("com.amazonaws", "aws-java-sdk"),
-  gtSpark
-    exclude("com.google.protobuf", "protobuf-java"),
-  gtVector
-    exclude("com.google.protobuf", "protobuf-java"),
-  gtVectorTile
-    exclude("com.google.protobuf", "protobuf-java"),
-  vectorpipe
-    exclude("com.google.protobuf", "protobuf-java")
+  tsConfig,
+  akkaHttpExt,
+  "org.apache.hadoop" % "hadoop-common" % "2.7.3"
+
 )
 
 fork in Test := true
@@ -42,7 +32,7 @@ initialCommands in console :=
   """
   """
 
-assemblyJarName in assembly := "osmesa-client.jar"
+assemblyJarName in assembly := "osmesa-query.jar"
 
 assemblyShadeRules in assembly := {
   val shadePackage = "com.azavea.shaded.demo"
@@ -52,13 +42,11 @@ assemblyShadeRules in assembly := {
     ShadeRule.rename("io.netty.**" -> s"$shadePackage.io.netty.@1")
       .inLibrary("com.azavea.geotrellis" %% "geotrellis-hbase" % Version.geotrellis).inAll,
     ShadeRule.rename("com.fasterxml.jackson.**" -> s"$shadePackage.com.fasterxml.jackson.@1")
-      .inLibrary("com.networknt" % "json-schema-validator" % "0.1.7").inAll,
-    ShadeRule.rename("org.apache.avro.**" -> s"$shadePackage.org.apache.avro.@1")
-      .inLibrary("com.azavea.geotrellis" %% "geotrellis-spark" % Version.geotrellis).inAll
+      .inLibrary("com.networknt" % "json-schema-validator" % "0.1.7").inAll
   )
 }
 
-val meta = raw"""META.INF(.)*""".r
+val meta = """META.INF(.)*""".r
 assemblyMergeStrategy in assembly := {
   case s if s.startsWith("META-INF/services") => MergeStrategy.concat
   case PathList("javax", "servlet", xs @ _*) => MergeStrategy.first

@@ -13,4 +13,16 @@ object Version {
   val kryo = "4.0.0"
   val snakeyaml = "1.8"
   val protobuf = "2.5.0"
+  val akka = "2.5.4"
+  val akkaHttp = "10.0.10"
+  val akkaSlf4j = "2.5.6"
+  val scalaLogging = "3.5.0"
+  val circe = "0.9.0-M1"
+  val akkaCirceJson = "1.18.1"
+  val logbackClassic = "1.1.7"
+  val tsConfig = "1.3.1"
+  val kamon = "0.6.0"
+  val kamonAkkaHttp = "0.6.8"
+  val akkaHttpExtensions = "0.4.13"
 }
+
