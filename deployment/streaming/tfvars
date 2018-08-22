@@ -1,6 +1,0 @@
-aws_key_name       = "geotrellis-emr"
-aws_profile        = "geotrellis"
-environment        = "testingOsmEnv"
-project            = "testingOsmProject"
-private_subnet_ids = ["subnet-0b1b374d"]
-vpc_id             = "vpc-617f9604"

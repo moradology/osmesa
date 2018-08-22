@@ -1,7 +1,11 @@
 FROM osmesa_analytics:latest
 
-HEALTHCHECK --interval=5m --timeout=3s \
-  CMD exit 0
+COPY healthcheck.sh /opt/healthcheck.sh
 
-ENTRYPOINT ["ls", "."]
+HEALTHCHECK --interval=5m --timeout=3s \
+  CMD /opt/healthcheck
+
+ENTRYPOINT ["spark-submit", \
+            "--class", "osmesa.analytics.oneoffs.AugmentedDiffStreamProcessor.scala", \
+            "/opt/osmesa-analytics.jar"]
 

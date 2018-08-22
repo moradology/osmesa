@@ -2,7 +2,7 @@
 # Autoscaling Resources
 #
 data "template_file" "container_instance_cloud_config" {
-  template = "${file("terraform/cloud-config/container-instance.yml.tpl")}"
+  template = "${file("cloud-config/container-instance.yml.tpl")}"
 
   vars {
     environment   = "${var.environment}"

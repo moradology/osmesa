@@ -8,7 +8,7 @@ resource "aws_ecs_service" "augdiff_stream" {
 
 resource "aws_ecs_task_definition" "augdiff_stream" {
   family                = "augdiff_stream"
-  container_definitions = "${file("terraform/task-definitions/augdiff_service.json")}"
+  container_definitions = "${file("task-definitions/augdiff_service.json")}"
 }
 
 resource "aws_ecr_repository" "augdiff_stream" {

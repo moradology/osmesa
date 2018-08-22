@@ -8,7 +8,7 @@ resource "aws_ecs_service" "changeset_stream" {
 
 resource "aws_ecs_task_definition" "changeset_stream" {
   family                = "changeset_stream"
-  container_definitions = "${file("terraform/task-definitions/changeset_service.json")}"
+  container_definitions = "${file("task-definitions/changeset_service.json")}"
 }
 
 resource "aws_ecr_repository" "changeset_stream" {

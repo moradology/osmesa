@@ -4,6 +4,7 @@ DOCKER_DIR="./docker"
 
 clean:
 	touch docker/osmesa-analytics.jar
+	rm -f docker/osmesa-analytics.jar
 	rm -f build
 	rm -f tfplan
 	rm -f $(DOCKER_DIR)/osmesa-analytics.jar
@@ -15,11 +16,21 @@ build:
 	touch build
 
 tfplan: build
-	terraform init ./terraform
-	terraform plan -var-file=tfvars -out=tfplan ./terraform
+	terraform init
+	terraform plan -var-file=tfvars -out=tfplan
 
 apply: tfplan
 	terraform apply tfplan
+
+refresh:
+	terraform refresh -var-file=tfvars
+
+destroy:
+	terraform destroy -var-file=tfvars
+
+validate:
+	terraform validate -var-file=tfvars
+
 
 containers: build
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yml build
