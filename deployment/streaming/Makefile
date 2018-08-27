@@ -1,11 +1,11 @@
 SBT_DIR="../../src"
 JAR_DIR=$(SBT_DIR)/analytics/target/scala-2.11/
-DOCKER_DIR="./docker"
+DOCKER_DIR="./"
+
 
 clean:
-	touch docker/osmesa-analytics.jar
-	rm -f docker/osmesa-analytics.jar
 	rm -f build
+	rm -f build-containers
 	rm -f tfplan
 	rm -f $(DOCKER_DIR)/osmesa-analytics.jar
 	cd $(SBT_DIR) && sbt "project analytics" clean
@@ -15,7 +15,8 @@ build:
 	cp $(JAR_DIR)/osmesa-analytics.jar $(DOCKER_DIR)/osmesa-analytics.jar
 	touch build
 
-tfplan: build
+plan:
+	rm -f tfplan
 	terraform init
 	terraform plan -var-file=tfvars -out=tfplan
 
@@ -31,7 +32,20 @@ destroy:
 validate:
 	terraform validate -var-file=tfvars
 
+build-containers: build
+	docker build -f $(DOCKER_DIR)/Dockerfile --tag osm_analytics:latest $(DOCKER_DIR)
+	touch build-containers
 
-containers: build
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yml build
+rebuild-containers:
+	docker build -f $(DOCKER_DIR)/Dockerfile --tag osm_analytics:latest $(DOCKER_DIR)
+
+push-containers: build-containers
+	$(shell aws ecr get-login --no-include-email --region us-east-1)
+	docker tag osm_analytics:latest $(shell terraform output osm_analytics_container_url)
+	docker push $(shell terraform output osm_analytics_container_url):latest
+
+
+
+
+
 

@@ -1,7 +1,0 @@
-[{
-  "name": "changeset_stream",
-  "image": "changeset_stream:latest",
-  "memory": 2000,
-  "cpu": 10,
-  "essential": true
-}]

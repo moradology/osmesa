@@ -36,3 +36,20 @@ variable "container_instance_type" {
   type         = "string"
   default      = "m5.large"
 }
+
+variable "changeset_source" {
+  type         = "string"
+}
+
+variable "augdiff_source" {
+  type         = "string"
+}
+
+variable "database_url" {
+  type         = "string"
+}
+
+variable "start_sequence" {
+  type         = "string"
+  default      = 1
+}

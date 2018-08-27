@@ -20,9 +20,8 @@ fi
 
 if [ $LAST_VALUE -gt $CURR_VALUE ]
   then
-    echo "The stream has stopped updating - not healthy"
-    exit 1
-  else
-    echo $CURR_VALUE > $LAST_FILE
     exit 0
+  else
+    echo "The stream is not updating (current segment: $CURR_VALUE; last segment: $LAST_VALUE)"
+    exit 1
 fi
