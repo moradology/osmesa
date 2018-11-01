@@ -4,13 +4,15 @@ import java.net.URI
 
 import cats.implicits._
 import com.monovore.decline.{CommandApp, Opts}
-import com.vividsolutions.jts.geom.{Geometry, Point}
+import com.vividsolutions.jts.geom.{Geometry, Point, Polygon, LineString}
 import geotrellis.proj4.{LatLng, WebMercator}
 import geotrellis.spark._
 import geotrellis.spark.io.index.ZCurveKeyIndexMethod
 import geotrellis.spark.tiling.ZoomedLayoutScheme
 import geotrellis.vector
+import geotrellis.vectortile
 import geotrellis.vectortile._
+import org.apache.spark.rdd._
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{SaveMode, SparkSession}
@@ -37,10 +39,6 @@ object CentroidStats extends CommandApp(
       import spark.implicits._
 
       spark.sparkContext.setLogLevel("WARN")
-
-      if (output.getScheme != "s3") {
-        throw new IllegalArgumentException("Output URI must point to S3 bucket")
-      }
 
       val logGridCells = 4 // Vector tiles will have 16x16 cells inside
       val cellZoom = baseZoom + logGridCells
@@ -90,6 +88,7 @@ object CentroidStats extends CommandApp(
 
       val augmentedBuildings = buildingGeoms
         .where(not(isnull('geom)))
+        .withColumn("test", toWM('geom))
         .withColumn("area", st_area('geom))
         .withColumn("center", st_centroid(toWM('geom)))
         .withColumn("zindex", indexWMPoint('center))
@@ -139,9 +138,9 @@ object CentroidStats extends CommandApp(
       tileData.show
 
       val tileLayout = zls.levelForZoom(baseZoom).layout
-      val keyedTiles = tileData
+      val statsVTiles = tileData
         .rdd
-        .map{ row => {
+        .flatMap { row =>
           val locations = row.getAs[Seq[Point]]("centers")
           val buildingCounts = row.getAs[Seq[Long]]("buildingCounts")
           val date = row.getAs[Seq[java.sql.Timestamp]]("weekBeginning")
@@ -150,31 +149,63 @@ object CentroidStats extends CommandApp(
           val ex = tileLayout.mapTransform(key)
 
           val features = for (i <- Range(0, locations.length)) yield
-            vector.PointFeature(
-              vector.Point(locations(i)),
-              Map("buildingsChanged" -> VInt64(buildingCounts(i)),
-                  "weekBeginning" -> VInt64(date(i).getTime)))
+            vector.Feature[vector.Geometry, Map[String, Value]](
+              vector.Geometry(locations(i)),
+              Map(
+                "buildingsChanged" -> VInt64(buildingCounts(i)),
+                "weekBeginning" -> VInt64(date(i).getTime),
+                "__id" -> VString(java.util.UUID.randomUUID().toString)
+              )
+            )
+          features
+        }
+      val keyedStats = GenerateVT.keyToLayout(statsVTiles, tileLayout)
 
-          (tmsKey, VectorTile(Map("statistics" -> StrictLayer(name="statistics",
-                                                           tileWidth=4096,
-                                                           version=2,
-                                                           tileExtent = ex,
-                                                           points = features,
-                                                           multiPoints = Seq(),
-                                                           lines = Seq(),
-                                                           multiLines = Seq(),
-                                                           polygons = Seq(),
-                                                           multiPolygons = Seq()
-                                                          )),
-                           ex)
-          )
-        }}
+      val statsVTilesReal =
+        GenerateVT.makeVectorTiles(keyedStats, tileLayout, "statistics")
+
+      val buildingFeatures: RDD[GenerateVT.VTF[vector.Geometry]] = augmentedBuildings
+        .rdd
+        .map { row =>
+          val id = row.getAs[Long]("id")
+          val area = row.getAs[Double]("area")
+          val geom: vector.Geometry = vector.Geometry(row.getAs[Geometry]("test"))
+          vector.Feature(geom, Map("area" -> VDouble(area), "__id" -> VString(id.toString)))
+        }
+      val keyedBuildings =
+        GenerateVT.keyToLayout(buildingFeatures, tileLayout)
+
+      val buildingVTiles =
+        GenerateVT.makeVectorTiles(keyedBuildings, tileLayout, "building_footprints")
+
+      val keyedTiles =
+        buildingVTiles.fullOuterJoin(statsVTilesReal).map { case (sk, tup) =>
+          tup match {
+            case (Some(b), Some(s)) =>
+              println("-x-x-BOTH", sk)
+              (sk, VectorTile(b.layers ++ s.layers, b.tileExtent))
+            case (None, Some(s)) =>
+              println("-x-x-only stats", sk)
+              (sk, s)
+            case (Some(b), None) =>
+              println("-x-x-only buildings", sk)
+              (sk, b)
+            case (None, None) => throw new java.lang.IllegalStateException("Shouldn't get here")
+          }
+        }
 
       val prefix = if (output.getPath.endsWith("/"))
                      output.getPath.drop(1).take(output.getPath.length - 2)
                    else
                      output.getPath.drop(1)
-      GenerateVT.save(keyedTiles, baseZoom, output.getAuthority, prefix)
+      output.getScheme match {
+        case "s3" =>
+          GenerateVT.save(keyedTiles, baseZoom, output.getAuthority, prefix)
+        case "file" =>
+          GenerateVT.saveHadoop(keyedTiles, baseZoom, output.toString)
+        case _ =>
+          throw new IllegalArgumentException("Output URI must use to S3 or file protocol")
+      }
 
       spark.stop()
     }

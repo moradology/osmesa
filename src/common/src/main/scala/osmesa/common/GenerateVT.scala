@@ -24,7 +24,7 @@ object GenerateVT {
 
   lazy val logger = Logger.getRootLogger()
 
-  type VTF[G <: Geometry] = Feature[G, Map[String, Value]]
+  type VTF[G <: geotrellis.vector.Geometry] = Feature[G, Map[String, Value]]
   // type VTContents = (Seq[VTF[Point]], Seq[VTF[MultiPoint]], Seq[VTF[Line]], Seq[VTF[MultiLine]], Seq[VTF[Polygon]], Seq[VTF[MultiPolygon]])
 
   case class VTContents(points: Array[VTF[Point]] = Array.empty,
